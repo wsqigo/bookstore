@@ -9,7 +9,9 @@ import (
 )
 
 func TestServer(t *testing.T) {
-	var s Server = &HTTPServer{}
+	// 直接创建router为nil
+	//var s Server = &HTTPServer{}
+	s := NewHTTPServer()
 
 	handler1 := func(ctx *Context) {
 		fmt.Println("处理第一件事")
@@ -22,6 +24,10 @@ func TestServer(t *testing.T) {
 	s.addRoute(http.MethodGet, "/user", func(ctx *Context) {
 		handler1(ctx)
 		handler2(*ctx)
+	})
+
+	s.addRoute(http.MethodGet, "/order/detail", func(ctx *Context) {
+		ctx.Resp.Write([]byte("hello, order detail"))
 	})
 
 	// 用法二

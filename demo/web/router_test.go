@@ -40,6 +40,27 @@ func Test_router_AddRoute(t *testing.T) {
 			method: http.MethodPost,
 			path:   "/login",
 		},
+		// 通配符测试用例
+		{
+			method: http.MethodGet,
+			path:   "/order/*",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/*",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/*/*",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/*/abc",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/*/abc/*",
+		},
 	}
 
 	mockHandler := func(ctx *Context) {}
@@ -51,14 +72,25 @@ func Test_router_AddRoute(t *testing.T) {
 	// 在这里断言路由树和你预期的一模一样
 	wantRouter := &router{
 		trees: map[string]*node{
-			http.MethodGet: {path: "/", children: map[string]*node{
-				"user": {path: "user", children: map[string]*node{
-					"home": {path: "home", handler: mockHandler},
-				}, handler: mockHandler},
-				"order": {path: "order", children: map[string]*node{
-					"detail": {path: "detail", handler: mockHandler},
-				}},
-			}, handler: mockHandler},
+			http.MethodGet: {
+				path: "/",
+				children: map[string]*node{
+					"user": {path: "user", children: map[string]*node{
+						"home": {path: "home", handler: mockHandler},
+					}, handler: mockHandler},
+					"order": {path: "order", children: map[string]*node{
+						"detail": {path: "detail", handler: mockHandler},
+					}, starChild: &node{path: "*", handler: mockHandler}},
+				},
+				starChild: &node{
+					path: "*",
+					children: map[string]*node{
+						"abc": {path: "abc", handler: mockHandler, starChild: &node{path: "*", handler: mockHandler}},
+					},
+					starChild: &node{path: "*", handler: mockHandler},
+					handler:   mockHandler,
+				},
+				handler: mockHandler},
 			http.MethodPost: {path: "/", children: map[string]*node{
 				"order": {path: "order", children: map[string]*node{
 					"create": {path: "create", handler: mockHandler},
@@ -69,7 +101,7 @@ func Test_router_AddRoute(t *testing.T) {
 	}
 
 	// 断言两者相等
-	msg, ok := wantRouter.equal(r)
+	msg, ok := wantRouter.equal(&r)
 	assert.True(t, ok, msg)
 
 	// 这个是不行的，因为 HandleFunc 是不可比的
@@ -134,6 +166,12 @@ func (n *node) equal(y *node) (string, bool) {
 		return fmt.Sprintf("节点路径不匹配"), false
 	}
 
+	if n.starChild != nil {
+		msg, ok := n.starChild.equal(y.starChild)
+		if !ok {
+			return msg, ok
+		}
+	}
 	// 比较 handler
 	nHandler := reflect.ValueOf(n.handler)
 	yHandler := reflect.ValueOf(y.handler)

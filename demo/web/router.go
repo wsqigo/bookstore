@@ -20,8 +20,8 @@ type router struct {
 	trees map[string]*node
 }
 
-func newRouter() *router {
-	return &router{
+func newRouter() router {
+	return router{
 		trees: map[string]*node{},
 	}
 }
@@ -107,20 +107,36 @@ func (r *router) findRoute(method string, path string) (*node, bool) {
 	return root, true
 }
 
+// node 代表路由树的节点
+// 路由树的匹配顺序是
+// 1. 静态完全匹配
+// 2. 通配符匹配
+// 这是不回溯匹配
 type node struct {
 	path string
 
-	// children 子节点
+	// 静态匹配的节点
 	// 子 path 到子节点的映射 子path => 子node
 	children map[string]*node
 
 	// handler 命中路由之后执行的逻辑
 	handler HandleFunc
+
+	// 通配符 * 表达的节点，任意匹配
+	starChild *node
 }
 
 // childOrCreate 查找子节点，如果子节点不存在就创建一个
 // 并且将子节点放回去了 children 中
 func (n *node) childOrCreate(seg string) *node {
+	if seg == "*" {
+		if n.starChild == nil {
+			n.starChild = &node{
+				path: "*",
+			}
+		}
+		return n.starChild
+	}
 	if n.children == nil {
 		n.children = make(map[string]*node)
 	}
@@ -136,10 +152,14 @@ func (n *node) childOrCreate(seg string) *node {
 	return res
 }
 
+// childOf 优先考虑静态匹配，匹配不上，再考虑通配符匹配
 func (n *node) childOf(path string) (*node, bool) {
 	if n.children == nil {
-		return nil, false
+		return n.starChild, n.starChild != nil
 	}
 	child, found := n.children[path]
+	if !found {
+		return n.starChild, n.starChild != nil
+	}
 	return child, found
 }

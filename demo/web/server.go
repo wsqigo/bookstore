@@ -37,7 +37,7 @@ type Server interface {
 
 type HTTPServer struct {
 	// addr string 创建的时候传递，而不是 Start 接收。这个都是可以的
-	*router
+	router
 }
 
 func NewHTTPServer() *HTTPServer {
@@ -61,7 +61,16 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // 查找路由，执行代码
 func (s *HTTPServer) serve(ctx *Context) {
-	//
+	r := ctx.Req
+	n, found := s.findRoute(r.Method, r.URL.Path)
+	if !found || n.handler == nil {
+		// 路由没有命中，就是404
+		ctx.Resp.WriteHeader(http.StatusNotFound)
+		_, _ = ctx.Resp.Write([]byte("Not Found"))
+		return
+	}
+
+	n.handler(ctx)
 }
 
 func (s *HTTPServer) Start(addr string) error {
