@@ -28,7 +28,9 @@ func newRouter() router {
 
 // addRoute 注册路由
 // method 是 HTTP 方法
-// path 必须以 / 开头并且结尾不能有 /，中间也不允许有连续的 /
+// - 已经注册了的路由，无法被覆盖。例如 /user/home注册两次，会冲突
+// - path 必须以 / 开头并且结尾不能有 /，中间也不允许有连续的 /
+// - 不能在同一个位置注册不同的参数路由，例如 /user/:id 和 /user/:name 冲突
 // 定义为私有的 addRoute
 // 1. 用户只能通过 Get 或者 Post来注册，那么可以确保 method 参数永远是对的
 // 2. addRoute 在接口里面是私有的，限制了用户将无法实现 Server。
@@ -66,7 +68,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
 
 	// 切割这个 path
 	segs := strings.Split(path[1:], "/")
-	// 开始一段处理
+	// 开始一段段处理
 	for _, seg := range segs {
 		if seg == "" {
 			panic(fmt.Sprintf("web: 非法路由。不允许使用 //a/b, /a//b 之类的路由,[%s]", path))
@@ -83,7 +85,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
 
 // findRoute 查找对应的节点
 // 注意，返回的 node 内部 handleFunc 不为nil才算是注册了路由
-func (r *router) findRoute(method string, path string) (*node, bool) {
+func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 	// 基本上是不是也是沿着树深度查找下去？
 	root, ok := r.trees[method]
 	if !ok {
@@ -91,26 +93,32 @@ func (r *router) findRoute(method string, path string) (*node, bool) {
 	}
 
 	if path == "/" {
-		return root, true
+		return &matchInfo{n: root}, true
 	}
 
 	// 这里把前置和后置的 / 都去掉，然后按照斜杠切割
 	segs := strings.Split(strings.Trim(path, "/"), "/")
+	mi := &matchInfo{}
 	for _, seg := range segs {
-		child, ok := root.childOf(seg)
+		var matchParam bool
+		root, matchParam, ok = root.childOf(seg)
 		if !ok {
 			return nil, false
 		}
-		root = child
+		if matchParam {
+			mi.addValue(root.path[1:], seg)
+		}
 	}
 
-	return root, true
+	mi.n = root
+	return mi, true
 }
 
 // node 代表路由树的节点
-// 路由树的匹配顺序是
+// 路由树的匹配顺序是：
 // 1. 静态完全匹配
-// 2. 通配符匹配
+// 2. 路径参数匹配：形式: param_name
+// 3. 通配符匹配：*
 // 这是不回溯匹配
 type node struct {
 	path string
@@ -122,44 +130,91 @@ type node struct {
 	// handler 命中路由之后执行的逻辑
 	handler HandleFunc
 
+	// 路径参数
+	paramChild *node
+
 	// 通配符 * 表达的节点，任意匹配
 	starChild *node
 }
 
-// childOrCreate 查找子节点，如果子节点不存在就创建一个
-// 并且将子节点放回去了 children 中
+// childOrCreate 查找子节点
+// 首先会判断 path 是不是通配符匹配
+// 其次判断 path 是不是参数路径，即以 : 开头的路径
+// 最后会从 children 里面查找，
+// 如果没有找到，那么会创建一个新的节点，并且保存在 node 里面
 func (n *node) childOrCreate(seg string) *node {
+	childNode := &node{
+		path: seg,
+	}
+
 	if seg == "*" {
+		if n.paramChild != nil {
+			panic(fmt.Sprintf("web: 非法路由，已有路径参数路由。不允许同时注册通配符路由和参数路由 [%s]", seg))
+		}
 		if n.starChild == nil {
-			n.starChild = &node{
-				path: "*",
-			}
+			n.starChild = childNode
 		}
 		return n.starChild
 	}
+
+	// 以 : 开头，我们认为是参数路由
+	if seg[0] == ':' {
+		if n.starChild != nil {
+			panic(fmt.Sprintf("web: 非法路由，已有通配符路由。不允许同时注册通配符路由和参数路由 [%s]", seg))
+		}
+		if n.paramChild == nil {
+			n.paramChild = childNode
+		} else {
+			if n.paramChild.path != seg {
+				panic(fmt.Sprintf("web: 路由冲突，参数路由冲突，已有 %s，新注册 %s", n.paramChild.path, seg))
+			}
+		}
+		return n.paramChild
+	}
+
 	if n.children == nil {
 		n.children = make(map[string]*node)
 	}
 	res, ok := n.children[seg]
 	if !ok {
 		// 要新建一个
-		res = &node{
-			path: seg,
-		}
+		res = childNode
 		n.children[seg] = res
 	}
 
 	return res
 }
 
-// childOf 优先考虑静态匹配，匹配不上，再考虑通配符匹配
-func (n *node) childOf(path string) (*node, bool) {
+// childOf 返回子节点
+// 第一个返回值 *node 是命中的节点
+// 第二个返回值 bool 代表是否是命中参数路由
+// 第三个返回值 bool 代表是否命中
+func (n *node) childOf(path string) (*node, bool, bool) {
 	if n.children == nil {
-		return n.starChild, n.starChild != nil
+		if n.paramChild != nil {
+			return n.paramChild, true, true
+		}
+		return n.starChild, false, n.starChild != nil
 	}
 	child, found := n.children[path]
 	if !found {
-		return n.starChild, n.starChild != nil
+		if n.paramChild != nil {
+			return n.paramChild, true, true
+		}
+		return n.starChild, false, n.starChild != nil
 	}
-	return child, found
+	return child, false, found
+}
+
+type matchInfo struct {
+	n          *node
+	pathParams map[string]string
+}
+
+func (m *matchInfo) addValue(key string, value string) {
+	if m.pathParams == nil {
+		// 大多数情况，参数路径只会有一段
+		m.pathParams = make(map[string]string, 1)
+	}
+	m.pathParams[key] = value
 }
