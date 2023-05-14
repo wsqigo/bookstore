@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -31,6 +32,8 @@ func newRouter() router {
 // - 已经注册了的路由，无法被覆盖。例如 /user/home注册两次，会冲突
 // - path 必须以 / 开头并且结尾不能有 /，中间也不允许有连续的 /
 // - 不能在同一个位置注册不同的参数路由，例如 /user/:id 和 /user/:name 冲突
+// - 不能在同一个位置同时注册通配符路由和参数路由，例如 /user/:id 和 /user/* 冲突
+// - 同名路径参数，在路由匹配的时候，值会被覆盖。例如 /user/:id/abc/:id，那么 /user/123/abc/456 最终 id = 456
 // 定义为私有的 addRoute
 // 1. 用户只能通过 Get 或者 Post来注册，那么可以确保 method 参数永远是对的
 // 2. addRoute 在接口里面是私有的，限制了用户将无法实现 Server。
@@ -100,27 +103,48 @@ func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 	segs := strings.Split(strings.Trim(path, "/"), "/")
 	mi := &matchInfo{}
 	for _, seg := range segs {
-		var matchParam bool
-		root, matchParam, ok = root.childOf(seg)
+		child, ok := root.childOf(seg)
 		if !ok {
+			// 最后一段 *
+			if root.typ == nodeTypeAny {
+				mi.n = root
+				return mi, true
+			}
 			return nil, false
 		}
-		if matchParam {
-			mi.addValue(root.path[1:], seg)
+		if child.paramName != "" {
+			mi.addValue(child.paramName, seg)
 		}
+		root = child
 	}
 
 	mi.n = root
 	return mi, true
 }
 
+type nodeType int
+
+const (
+	// 静态路由
+	nodeTypeStatic = iota
+	// 正则路由
+	nodeTypeReg
+	// 路径参数路由
+	nodeTypeParam
+	// 通配符路由
+	nodeTypeAny
+)
+
 // node 代表路由树的节点
 // 路由树的匹配顺序是：
 // 1. 静态完全匹配
-// 2. 路径参数匹配：形式: param_name
+// 2. 正则匹配，形式: param_name(reg_expr)
+// 3. 路径参数匹配：形式: param_name
 // 3. 通配符匹配：*
 // 这是不回溯匹配
 type node struct {
+	typ nodeType
+
 	path string
 
 	// 静态匹配的节点
@@ -132,9 +156,15 @@ type node struct {
 
 	// 路径参数
 	paramChild *node
+	// 正则路由和参数路由都会使用这个字段
+	paramName string
 
 	// 通配符 * 表达的节点，任意匹配
 	starChild *node
+
+	// 正则表达式
+	regChild *node
+	regExpr  *regexp.Regexp
 }
 
 // childOrCreate 查找子节点
@@ -151,25 +181,24 @@ func (n *node) childOrCreate(seg string) *node {
 		if n.paramChild != nil {
 			panic(fmt.Sprintf("web: 非法路由，已有路径参数路由。不允许同时注册通配符路由和参数路由 [%s]", seg))
 		}
+		if n.regChild != nil {
+			panic(fmt.Sprintf("web: 非法路由，已有正则路由。不允许同时注册通配符路由和正则路由 [%s]", seg))
+		}
 		if n.starChild == nil {
+			childNode.typ = nodeTypeAny
 			n.starChild = childNode
 		}
 		return n.starChild
 	}
 
-	// 以 : 开头，我们认为是参数路由
+	// 以 : 开头，需要进一步解析，判断是参数路由还是正则路由
 	if seg[0] == ':' {
-		if n.starChild != nil {
-			panic(fmt.Sprintf("web: 非法路由，已有通配符路由。不允许同时注册通配符路由和参数路由 [%s]", seg))
-		}
-		if n.paramChild == nil {
-			n.paramChild = childNode
+		paramName, expr, isReg := n.parseParam(seg)
+		if isReg {
+			return n.childOrCreateReg(seg, expr, paramName)
 		} else {
-			if n.paramChild.path != seg {
-				panic(fmt.Sprintf("web: 路由冲突，参数路由冲突，已有 %s，新注册 %s", n.paramChild.path, seg))
-			}
+			return n.childOrCreateParam(seg, paramName)
 		}
-		return n.paramChild
 	}
 
 	if n.children == nil {
@@ -185,25 +214,90 @@ func (n *node) childOrCreate(seg string) *node {
 	return res
 }
 
+func (n *node) childOrCreateParam(path string, paramName string) *node {
+	if n.starChild != nil {
+		panic(fmt.Sprintf("web: 非法路由，已有通配符路由。不允许同时注册通配符路由和参数路由 [%s]", path))
+	}
+	if n.regChild != nil {
+		panic(fmt.Sprintf("web: 非法路由，已有正则路由。不允许同时注册正则路由和参数路由 [%s]", path))
+	}
+	if n.paramChild == nil {
+		n.paramChild = &node{path: path, paramName: paramName, typ: nodeTypeParam}
+	} else {
+		if n.paramChild.path != path {
+			panic(fmt.Sprintf("web: 路由冲突，参数路由冲突，已有 %s，新注册 %s", n.paramChild.path, path))
+		}
+	}
+	return n.paramChild
+}
+
+func (n *node) childOrCreateReg(path string, expr string, paramName string) *node {
+	if n.starChild != nil {
+		panic(fmt.Sprintf("web: 非法路由，已有通配符路由。不允许同时注册通配符路由和正则路由 [%s]", path))
+	}
+	if n.paramChild != nil {
+		panic(fmt.Sprintf("web: 非法路由，已有路径参数路由。不允许同时注册正则路由和参数路由 [%s]", path))
+	}
+	if n.regChild == nil {
+		regExr, err := regexp.Compile(expr)
+		if err != nil {
+			panic(fmt.Errorf("web: 正则表达式错误 %w", err))
+		}
+		n.regChild = &node{path: path, paramName: paramName, regExpr: regExr, typ: nodeTypeReg}
+	} else {
+		// :id() :name()
+		if n.regChild.regExpr.String() != expr || n.regChild.paramName != paramName {
+			panic(fmt.Sprintf("web: 路由冲突，正则路由冲突，已有 %s，新注册 %s", n.paramChild.path, path))
+		}
+	}
+	return n.regChild
+}
+
+// parseParam 用于解析判断是不是正则表达式
+// 第一个返回值是参数名字
+// 第二个返回值是正则表达式
+// 第三个返回值为 true，则说明是正则路由
+func (n *node) parseParam(path string) (string, string, bool) {
+	// 去除 :
+	path = path[1:]
+	// paramName(xxx)
+	segs := strings.SplitN(path, "(", 2)
+	if len(segs) == 2 {
+		expr := segs[1]
+		if strings.HasSuffix(expr, ")") {
+			return segs[0], expr[:len(expr)-1], true
+		}
+	}
+	return path, "", false
+}
+
+// childOfNonStatic 从非静态匹配的子节点里面查找
+func (n *node) childOfNonStatic(path string) (*node, bool) {
+	if n.regChild != nil {
+		if n.regChild.regExpr.MatchString(path) {
+			return n.regChild, true
+		}
+	}
+
+	if n.paramChild != nil {
+		return n.paramChild, true
+	}
+	return n.starChild, n.starChild != nil
+}
+
 // childOf 返回子节点
 // 第一个返回值 *node 是命中的节点
 // 第二个返回值 bool 代表是否是命中参数路由
 // 第三个返回值 bool 代表是否命中
-func (n *node) childOf(path string) (*node, bool, bool) {
+func (n *node) childOf(path string) (*node, bool) {
 	if n.children == nil {
-		if n.paramChild != nil {
-			return n.paramChild, true, true
-		}
-		return n.starChild, false, n.starChild != nil
+		return n.childOfNonStatic(path)
 	}
 	child, found := n.children[path]
 	if !found {
-		if n.paramChild != nil {
-			return n.paramChild, true, true
-		}
-		return n.starChild, false, n.starChild != nil
+		return n.childOfNonStatic(path)
 	}
-	return child, false, found
+	return child, found
 }
 
 type matchInfo struct {
