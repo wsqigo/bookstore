@@ -17,8 +17,8 @@ type HandleFunc func(ctx *Context)
 // 确保 HTTPServer 一定实现了 Server 接口
 var _ Server = &HTTPServer{}
 
-// Server 组合http.Handler并且增加Start方法
-// 既可以当成普通的http.Handler来使用，又可以一个独立的实体，拥有自己的管理生命周期的能力
+// Server 组合 http.Handler 并且增加 Start 方法
+// 既可以当成普通的 http.Handler 来使用，又可以一个独立的实体，拥有自己的管理生命周期的能力
 type Server interface {
 	http.Handler
 	// Start 启动服务器
@@ -48,7 +48,7 @@ func NewHTTPServer() *HTTPServer {
 
 // ServeHTTP HTTPServer 处理请求的入口
 // web框架的核心入口。我们将整个方法内部完成：
-// 1. Context构建 2. 路由匹配 3. 执行业务逻辑
+// 1. Context 构建 2. 路由匹配 3. 执行业务逻辑
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 你的框架代码就在这里
 	ctx := &Context{
