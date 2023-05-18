@@ -35,14 +35,34 @@ type Server interface {
 
 }
 
+type HTTPServerOption func(server *HTTPServer)
+
 type HTTPServer struct {
 	// addr string 创建的时候传递，而不是 Start 接收。这个都是可以的
 	router
+
+	mdls []Middleware
 }
 
-func NewHTTPServer() *HTTPServer {
-	return &HTTPServer{
+func NewHTTPServer(opts ...HTTPServerOption) *HTTPServer {
+	res := &HTTPServer{
 		router: newRouter(),
+	}
+	for _, opt := range opts {
+		opt(res)
+	}
+	return res
+}
+
+//// 第一个问题：相对路径还是绝对路径？
+//// 你的配置文件格式，json, yaml, xml
+//func NewHTTPServerV2(cfgFilePath string) *HTTPServer {
+//	// 你在这里加载配置，解析，然后初始化 HTTPSever
+//}
+
+func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
+	return func(server *HTTPServer) {
+		server.mdls = mdls
 	}
 }
 
@@ -56,7 +76,17 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Resp: w,
 	}
 
-	s.serve(ctx)
+	// 最后一个是这个
+	root := s.serve
+	// 然后这里就是利用最后一个不断往前回溯组装链条
+	// 从后往前
+	// 把后一个作为前一个的 next 构造好链条
+	for i := len(s.mdls) - 1; i >= 0; i-- {
+		root = s.mdls[i](root)
+	}
+
+	// 这里执行的时候，就是从前往后了
+	root(ctx)
 }
 
 // 查找路由，执行代码
@@ -71,10 +101,15 @@ func (s *HTTPServer) serve(ctx *Context) {
 	}
 
 	ctx.PathParams = info.pathParams
+	ctx.MatchedRoute = info.n.route
 	info.n.handler(ctx)
 }
 
+// Start 启动服务器，用户指定端口
+// 这种就是编程接口
 func (s *HTTPServer) Start(addr string) error {
+	// 也可以自己创建 Server
+	// http.Server{}
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err

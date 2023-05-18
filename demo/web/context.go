@@ -20,6 +20,8 @@ type Context struct {
 
 	// 缓存的数据
 	cacheQueryValues url.Values
+
+	MatchedRoute string
 }
 
 func (c *Context) SetCookie(cookie *http.Cookie) {

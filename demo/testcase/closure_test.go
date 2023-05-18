@@ -12,7 +12,7 @@ func TestClient(t *testing.T) {
 	http.ListenAndServe(":3000", nil)
 }
 
-func timed(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+func timed(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		f(w, r)

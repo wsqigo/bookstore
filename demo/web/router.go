@@ -66,6 +66,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
 			panic("web: 路由冲突[/]")
 		}
 		root.handler = handleFunc
+		root.route = path
 		return
 	}
 
@@ -84,6 +85,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
 		panic(fmt.Sprintf("web: 路由冲突，重复注册[%s]", path))
 	}
 	root.handler = handleFunc
+	root.route = path
 }
 
 // findRoute 查找对应的节点
@@ -146,6 +148,8 @@ type node struct {
 	typ nodeType
 
 	path string
+	// 整个路由
+	route string
 
 	// 静态匹配的节点
 	// 子 path 到子节点的映射 子path => 子node
