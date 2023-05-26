@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net"
 	"net/http"
 )
@@ -76,7 +77,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Resp: w,
 	}
 
-	// 最后一个是这个
+	// 最后一个应该是 HTTPServer 执行路由匹配，执行用户代码
 	root := s.serve
 	// 然后这里就是利用最后一个不断往前回溯组装链条
 	// 从后往前
@@ -85,18 +86,38 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		root = s.mdls[i](root)
 	}
 
-	// 这里执行的时候，就是从前往后了
+	// 第一个应该是回写响应的
+	// 因为它在调用 next 之后才回写响应
+	// 所以实际上 flashResp 是最后一个步骤
+	var m Middleware = func(next HandleFunc) HandleFunc {
+		return func(ctx *Context) {
+			// 设置好了 RespData 和 RespStatusCode
+			next(ctx)
+			s.flashResp(ctx)
+		}
+	}
+	root = m(root)
 	root(ctx)
+}
+
+func (s *HTTPServer) flashResp(ctx *Context) {
+	if ctx.RespStatusCode != 0 {
+		ctx.Resp.WriteHeader(ctx.RespStatusCode)
+	}
+	_, err := ctx.Resp.Write(ctx.RespData)
+	if err != nil {
+		log.Fatalln("回写响应失败", err)
+	}
 }
 
 // 查找路由，执行代码
 func (s *HTTPServer) serve(ctx *Context) {
 	r := ctx.Req
 	info, found := s.findRoute(r.Method, r.URL.Path)
-	if !found || info.n.handler == nil {
+	if !found || info.n == nil || info.n.handler == nil {
 		// 路由没有命中，就是404
-		ctx.Resp.WriteHeader(http.StatusNotFound)
-		_, _ = ctx.Resp.Write([]byte("Not Found"))
+		ctx.RespStatusCode = http.StatusNotFound
+		ctx.RespData = []byte("NOT FOUND")
 		return
 	}
 

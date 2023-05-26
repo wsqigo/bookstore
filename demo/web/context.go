@@ -14,9 +14,20 @@ import (
 */
 
 type Context struct {
-	Req        *http.Request
-	Resp       http.ResponseWriter
+	Req *http.Request
+	// Resp 原生的 ResponseWriter。当你直接使用 Resp 的时候，
+	// 那么相当于你绕开了 RespData 和 RespStatusCode。
+	// 响应数据直接被发送到前端，其它中间件将无法修改响应
+	Resp http.ResponseWriter
+
+	// 缓存的响应部分
+	// 这部分数据会在最后刷新到前端
+	RespData       []byte
+	RespStatusCode int
+
 	PathParams map[string]string
+
+	//Ctx context.Context
 
 	// 缓存的数据
 	cacheQueryValues url.Values
@@ -36,9 +47,9 @@ func (c *Context) RespJSON(statusCode int, val any) error {
 		return err
 	}
 
-	c.Resp.WriteHeader(statusCode)
 	//c.Resp.Header().Set("Content-Type", "application/json")
-	_, err = c.Resp.Write(data)
+	c.RespStatusCode = statusCode
+	c.RespData = data
 	return err
 }
 
