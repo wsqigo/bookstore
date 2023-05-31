@@ -30,7 +30,7 @@ type Server interface {
 	// method 是 HTTP 方法
 	// path 是路径，必须以 / 为开头
 	// handleFunc 是你的业务逻辑
-	addRoute(method string, path string, handleFunc HandleFunc)
+	addRoute(method string, path string, handleFunc HandleFunc, mdls ...Middleware)
 	// 我们并不采取这种设计方案
 	// addRoute(method string, path string, handles ...HandleFunc)
 
@@ -65,6 +65,12 @@ func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
 	return func(server *HTTPServer) {
 		server.mdls = mdls
 	}
+}
+
+// Use 会执行路由匹配，只有匹配上了的 mdls 才会生效
+// 这个只需要稍微改造一下路由树就可以实现
+func (s *HTTPServer) Use(method string, path string, mdls ...Middleware) {
+
 }
 
 // ServeHTTP HTTPServer 处理请求的入口

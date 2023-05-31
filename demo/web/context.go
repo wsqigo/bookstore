@@ -18,6 +18,7 @@ type Context struct {
 	// Resp 原生的 ResponseWriter。当你直接使用 Resp 的时候，
 	// 那么相当于你绕开了 RespData 和 RespStatusCode。
 	// 响应数据直接被发送到前端，其它中间件将无法修改响应
+	// 其实我们也可以考虑将这个做成私有的
 	Resp http.ResponseWriter
 
 	// 缓存的响应部分
@@ -31,7 +32,7 @@ type Context struct {
 
 	// 缓存的数据
 	cacheQueryValues url.Values
-
+	// 命中的路由
 	MatchedRoute string
 }
 
@@ -112,7 +113,7 @@ func (c *Context) FormValueV2(key string) StringValue {
 //	return strconv.ParseInt(val, 10, 64)
 //}
 
-// Query 和表单比起来，它没有缓存
+// QueryValue Query 和表单比起来，它没有缓存
 func (c *Context) QueryValue(key string) (string, error) {
 	// 用户区别不出来是真的有值，但是值恰好是空字符串
 	// 还是没有值

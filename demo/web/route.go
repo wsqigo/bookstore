@@ -16,7 +16,7 @@ type router struct {
 	// Beego Gin HTTP method 对应一棵树
 	// GET 有一棵树，POST 也有一棵树
 
-	// trees 是按照HTTP方法来组织的
+	// trees 是按照 HTTP 方法来组织的
 	// http method => 路由树根节点
 	trees map[string]*node
 }
@@ -37,7 +37,7 @@ func newRouter() router {
 // 定义为私有的 addRoute
 // 1. 用户只能通过 Get 或者 Post来注册，那么可以确保 method 参数永远是对的
 // 2. addRoute 在接口里面是私有的，限制了用户将无法实现 Server。
-func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
+func (r *router) addRoute(method string, path string, handleFunc HandleFunc, mdls ...Middleware) {
 	// 对 path 进行校验
 	if path == "" {
 		panic("web: 路由是空字符串")
@@ -86,6 +86,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc) {
 	}
 	root.handler = handleFunc
 	root.route = path
+	root.matchedMdls = mdls
 }
 
 // findRoute 查找对应的节点
@@ -122,6 +123,10 @@ func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 
 	mi.n = root
 	return mi, true
+}
+
+func (r *router) findMdls() {
+
 }
 
 type nodeType int
@@ -169,6 +174,8 @@ type node struct {
 	// 正则表达式
 	regChild *node
 	regExpr  *regexp.Regexp
+
+	matchedMdls []Middleware
 }
 
 // childOrCreate 查找子节点
@@ -291,7 +298,6 @@ func (n *node) childOfNonStatic(path string) (*node, bool) {
 
 // childOf 返回子节点
 // 第一个返回值 *node 是命中的节点
-// 第二个返回值 bool 代表是否是命中参数路由
 // 第三个返回值 bool 代表是否命中
 func (n *node) childOf(path string) (*node, bool) {
 	if n.children == nil {
@@ -307,6 +313,7 @@ func (n *node) childOf(path string) (*node, bool) {
 type matchInfo struct {
 	n          *node
 	pathParams map[string]string
+	mdls       []Middleware
 }
 
 func (m *matchInfo) addValue(key string, value string) {

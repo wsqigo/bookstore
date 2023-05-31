@@ -573,3 +573,65 @@ func Test_router_findRoute(t *testing.T) {
 		})
 	}
 }
+
+func Test_findRoute_Middleware(t *testing.T) {
+	var mdlBuilder = func(i byte) Middleware {
+		return func(next HandleFunc) HandleFunc {
+			return func(ctx *Context) {
+				ctx.RespData = append(ctx.RespData, 1)
+				next(ctx)
+			}
+		}
+	}
+
+	mdlsRoute := []struct {
+		method string
+		path   string
+		mdls   []Middleware
+	}{
+		{
+			method: http.MethodGet,
+			path:   "/a/b",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('b')},
+		},
+		{
+			method: http.MethodGet,
+			path:   "/a/*",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('*')},
+		},
+		{
+			method: http.MethodGet,
+			path:   "/a/b/*",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('b'), mdlBuilder('*')},
+		},
+		{
+			method: http.MethodPost,
+			path:   "/a/b/*",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('b'), mdlBuilder('*')},
+		},
+		{
+			method: http.MethodPost,
+			path:   "/a/*/c",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('*'), mdlBuilder('c')},
+		},
+		{
+			method: http.MethodPost,
+			path:   "/a/b/c",
+			mdls:   []Middleware{mdlBuilder('a'), mdlBuilder('b'), mdlBuilder('c')},
+		},
+		{
+			method: http.MethodDelete,
+			path:   "/*",
+			mdls:   []Middleware{mdlBuilder('*')},
+		},
+		{
+			method: http.MethodDelete,
+			path:   "/",
+			mdls:   []Middleware{mdlBuilder('/')},
+		},
+	}
+	r := newRouter()
+	for _, mdlRoute := range mdlsRoute {
+		r.addRoute(mdlRoute.method, mdlRoute.path, nil)
+	}
+}
