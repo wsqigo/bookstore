@@ -70,7 +70,7 @@ func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
 // Use 会执行路由匹配，只有匹配上了的 mdls 才会生效
 // 这个只需要稍微改造一下路由树就可以实现
 func (s *HTTPServer) Use(method string, path string, mdls ...Middleware) {
-
+	s.addRoute(method, path, nil, mdls...)
 }
 
 // ServeHTTP HTTPServer 处理请求的入口

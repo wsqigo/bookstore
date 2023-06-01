@@ -1,6 +1,7 @@
 package web
 
 import (
+	list2 "container/list"
 	"fmt"
 	"regexp"
 	"strings"
@@ -29,7 +30,7 @@ func newRouter() router {
 
 // addRoute 注册路由
 // method 是 HTTP 方法
-// - 已经注册了的路由，无法被覆盖。例如 /user/home注册两次，会冲突
+// - 已经注册了的路由，无法被覆盖。例如 /user/home 注册两次，会冲突
 // - path 必须以 / 开头并且结尾不能有 /，中间也不允许有连续的 /
 // - 不能在同一个位置注册不同的参数路由，例如 /user/:id 和 /user/:name 冲突
 // - 不能在同一个位置同时注册通配符路由和参数路由，例如 /user/:id 和 /user/* 冲突
@@ -65,6 +66,7 @@ func (r *router) addRoute(method string, path string, handleFunc HandleFunc, mdl
 		if root.handler != nil {
 			panic("web: 路由冲突[/]")
 		}
+		root.matchedMdls = mdls
 		root.handler = handleFunc
 		root.route = path
 		return
@@ -99,12 +101,13 @@ func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 	}
 
 	if path == "/" {
-		return &matchInfo{n: root}, true
+		return &matchInfo{n: root, mdls: root.matchedMdls}, true
 	}
 
 	// 这里把前置和后置的 / 都去掉，然后按照斜杠切割
 	segs := strings.Split(strings.Trim(path, "/"), "/")
 	mi := &matchInfo{}
+	mi.mdls = r.findMdls(root, segs)
 	for _, seg := range segs {
 		child, ok := root.childOf(seg)
 		if !ok {
@@ -120,13 +123,46 @@ func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 		}
 		root = child
 	}
-
 	mi.n = root
 	return mi, true
 }
 
-func (r *router) findMdls() {
+func (r *router) findMdls(root *node, segs []string) []Middleware {
+	q := list2.New()
+	q.PushBack(root)
+	mdls := make([]Middleware, 0)
+	for _, seg := range segs {
+		// 当前这一段能够命中的子节点
+		children := make([]*node, 0)
+		for q.Len() > 0 {
+			root = q.Remove(q.Front()).(*node)
+			mdls = append(mdls, root.matchedMdls...)
+			if root.starChild != nil {
+				children = append(children, root.starChild)
+			}
+			if root.paramChild != nil {
+				children = append(children, root.paramChild)
+			}
+			if root.regChild != nil && root.regExpr.MatchString(seg) {
+				children = append(children, root.regChild)
+			}
+			if root.children != nil {
+				child, ok := root.children[seg]
+				if ok {
+					children = append(children, child)
+				}
+			}
+		}
+		for _, child := range children {
+			q.PushBack(child)
+		}
+	}
 
+	for q.Len() > 0 {
+		root = q.Remove(q.Front()).(*node)
+		mdls = append(mdls, root.matchedMdls...)
+	}
+	return mdls
 }
 
 type nodeType int
