@@ -3,7 +3,9 @@
 package web
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/http"
 	"testing"
 )
@@ -42,6 +44,32 @@ func TestServer(t *testing.T) {
 			ctx.Resp.Write([]byte("id 输入不对"))
 		}
 		ctx.Resp.Write([]byte(fmt.Sprintf("hello, %s", id)))
+	})
+
+	s.Get("/login", func(ctx *Context) {
+		// 返回登录页面
+		tpl := template.New("login")
+		tpl, err := tpl.Parse(`
+<html>
+	<body>
+		<form>
+			// 在这里继续写页面
+		</form>
+	</body>
+</html>
+`)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		page := &bytes.Buffer{}
+		err = tpl.Execute(page, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ctx.RespStatusCode = http.StatusOK
+		ctx.RespData = page.Bytes()
 	})
 
 	// 用法二

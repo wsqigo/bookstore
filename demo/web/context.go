@@ -34,6 +34,33 @@ type Context struct {
 	cacheQueryValues url.Values
 	// 命中的路由
 	MatchedRoute string
+
+	tplEngine TemplateEngine
+}
+
+// 没特别大必要，因为一般都是使用 200 作为状态码
+//func (c *Context) Render(statusCode int, tplName string, data any) error {
+//	var err error
+//	c.Resp, err = c.tplEngine.Render(c.Req.Context(), tplName, data)
+//	if err != nil {
+//		c.RespStatusCode = http.StatusInternalServerError
+//		return err
+//	}
+//
+//	c.RespStatusCode = statusCode
+//	return nil
+//}
+
+func (c *Context) Render(tplName string, data any) error {
+	var err error
+	c.RespData, err = c.tplEngine.Render(c.Req.Context(), tplName, data)
+	if err != nil {
+		c.RespStatusCode = http.StatusInternalServerError
+		return err
+	}
+
+	c.RespStatusCode = http.StatusOK
+	return nil
 }
 
 func (c *Context) SetCookie(cookie *http.Cookie) {
