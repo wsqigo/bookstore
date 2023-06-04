@@ -43,6 +43,8 @@ type HTTPServer struct {
 	router
 
 	mdls []Middleware
+
+	tplEngine TemplateEngine
 }
 
 func NewHTTPServer(opts ...HTTPServerOption) *HTTPServer {
@@ -67,6 +69,12 @@ func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
 	}
 }
 
+func ServerWithTemplateEngine(engine TemplateEngine) HTTPServerOption {
+	return func(server *HTTPServer) {
+		server.tplEngine = engine
+	}
+}
+
 // Use 会执行路由匹配，只有匹配上了的 mdls 才会生效
 // 这个只需要稍微改造一下路由树就可以实现
 func (s *HTTPServer) Use(method string, path string, mdls ...Middleware) {
@@ -79,8 +87,9 @@ func (s *HTTPServer) Use(method string, path string, mdls ...Middleware) {
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 你的框架代码就在这里
 	ctx := &Context{
-		Req:  r,
-		Resp: w,
+		Req:       r,
+		Resp:      w,
+		tplEngine: s.tplEngine,
 	}
 
 	// 最后一个应该是 HTTPServer 执行路由匹配，执行用户代码
