@@ -2,11 +2,14 @@ package web
 
 import (
 	"github.com/google/uuid"
+	lru "github.com/hashicorp/golang-lru"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 type FileUploader struct {
@@ -89,4 +92,164 @@ func NewFileUploader(opts ...FileUploaderOption) *FileUploader {
 // 这种形态和 Option 模式配合就很好
 func (u FileUploader) HandleFunc(ctx *Context) {
 	// 文件传
+}
+
+type FileDownloader struct {
+	Dir string
+}
+
+func (d FileDownloader) Handle() HandleFunc {
+	return func(ctx *Context) {
+		// 用的是 xxx?file=xxx
+		req, err := ctx.QueryValue("file")
+		if err != nil {
+			ctx.RespStatusCode = http.StatusBadRequest
+			ctx.RespData = []byte("找不到目标文件")
+			return
+		}
+		path := filepath.Join(d.Dir, filepath.Clean(req))
+		// 做一个校验，防止相对路径引起攻击者下载了你的系统文件
+		// path, err = filepath.Abs(path)
+		// if strings.Contains(path, d.Dir) {
+		//
+		// }
+		fn := filepath.Base(path)
+		header := ctx.Resp.Header()
+		header.Set("Content-Disposition", "attachment;filename="+fn)
+		header.Set("Content-Disposition", "File Transfer")
+		header.Set("Content-Type", "application/octet-stream")
+		header.Set("Content-Transfer-Encoding", "binary")
+		// 下面两个是控制缓存的
+		header.Set("Expires", "0")
+		header.Set("Cache-Control", "must-revalidate")
+		header.Set("Pragma", "public")
+
+		http.ServeFile(ctx.Resp, ctx.Req, path)
+	}
+}
+
+type StaticResourceHandlerOption func(h *StaticResourceHandler)
+
+type StaticResourceHandler struct {
+	dir               string
+	extContextTypeMap map[string]string
+
+	// 缓存静态资源的限制
+	cache       *lru.Cache
+	maxFileSize int
+}
+
+type fileCacheItem struct {
+	fileName    string
+	fileSize    int
+	contentType string
+	data        []byte
+}
+
+func NewStaticResourceHandler(dir string, opts ...StaticResourceHandlerOption) (*StaticResourceHandler, error) {
+	res := &StaticResourceHandler{
+		dir: dir,
+		extContextTypeMap: map[string]string{
+			// 这里根据自己的需要不断添加
+			"jpeg": "image/jpeg",
+			"jpe":  "image/jpeg",
+			"jpg":  "image/jpeg",
+			"png":  "image/png",
+			"pdf":  "image/pdf",
+		},
+	}
+	for _, opt := range opts {
+		opt(res)
+	}
+
+	return res, nil
+}
+
+// WithFileCache 静态文件将会被缓存
+// maxFileSizeThreshold 超过这个大小的文件，就被认为是大文件，我们将不会缓存
+// 所以我们最多缓存 maxFileSizeThreshold * maxCacheFileCnt
+func WithFileCache(maxFileSizeThreshold int, maxCacheFileCnt int) StaticResourceHandlerOption {
+	return func(h *StaticResourceHandler) {
+		c, err := lru.New(maxCacheFileCnt)
+		if err != nil {
+			log.Printf("创建缓存失败，将不会缓存静态资源")
+		}
+		h.maxFileSize = maxFileSizeThreshold
+		h.cache = c
+	}
+}
+
+func WithMoreExtension(extMap map[string]string) StaticResourceHandlerOption {
+	return func(h *StaticResourceHandler) {
+		for ext, contentType := range extMap {
+			h.extContextTypeMap[ext] = contentType
+		}
+	}
+}
+
+func (h *StaticResourceHandler) Handle(ctx *Context) {
+	// 1. 拿到目标文件名
+	req, err := ctx.PathValue("file")
+	if err != nil {
+		ctx.RespStatusCode = http.StatusBadRequest
+		ctx.RespData = []byte("请求路径不对")
+		return
+	}
+	item, ok := h.readFileFromData(req)
+	if ok {
+		log.Printf("从缓存中读取数据...")
+		h.writeItemAsResponse(item, ctx.Resp)
+	}
+
+	// 2. 定位到目标文件，并且读出来
+	path := filepath.Join(h.dir, req)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		ctx.RespStatusCode = http.StatusInternalServerError
+		ctx.RespData = []byte("服务器错误")
+		return
+	}
+	// 3. 返回给前端
+	ext := getFileExt(path)
+	t, ok := h.extContextTypeMap[ext]
+	if !ok {
+		ctx.RespStatusCode = http.StatusBadRequest
+		return
+	}
+	item = &fileCacheItem{
+		fileSize:    len(data),
+		data:        data,
+		contentType: t,
+		fileName:    req,
+	}
+	h.cacheFile(item)
+	h.writeItemAsResponse(item, ctx.Resp)
+}
+
+func getFileExt(name string) string {
+	ext := filepath.Ext(name)
+	return ext[1:]
+}
+
+func (h *StaticResourceHandler) readFileFromData(fileName string) (*fileCacheItem, bool) {
+	if h.cache != nil {
+		if item, ok := h.cache.Get(fileName); ok {
+			return item.(*fileCacheItem), true
+		}
+	}
+
+	return nil, false
+}
+
+func (h *StaticResourceHandler) cacheFile(item *fileCacheItem) {
+	if h.cache != nil && item.fileSize < h.maxFileSize {
+		h.cache.Add(item.fileName, item)
+	}
+}
+
+func (h *StaticResourceHandler) writeItemAsResponse(item *fileCacheItem, writer http.ResponseWriter) {
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", item.contentType)
+	writer.Header().Set("Content-Type", strconv.Itoa(item.fileSize))
+	_, _ = writer.Write(item.data)
 }
