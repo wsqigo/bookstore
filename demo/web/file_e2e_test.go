@@ -19,8 +19,8 @@ func TestUpload(t *testing.T) {
 	}
 
 	s := NewHTTPServer(ServerWithTemplateEngine(engine))
-	s.Get("/upload", func(ctx *Context) {
-		err = ctx.Render("upload.gohtml", nil)
+	s.Get("/uploads", func(ctx *Context) {
+		err = ctx.Render("uploads.gohtml", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -31,10 +31,10 @@ func TestUpload(t *testing.T) {
 		// 那个 name 的取值
 		FileField: "myfile",
 		DstPathFunc: func(fh *multipart.FileHeader) string {
-			return filepath.Join("testdata", "upload", fh.Filename)
+			return filepath.Join("testdata", "uploads", fh.Filename)
 		},
 	}
-	s.Post("/upload", fu.Handle())
+	s.Post("/uploads", fu.Handle())
 	s.Start(":8081")
 }
 
