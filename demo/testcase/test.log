@@ -1,0 +1,4 @@
+2023-06-16T00:26:49.531+0800	DEBUG	Trying to hit GET request for www.sogo.com
+2023-06-16T00:26:49.547+0800	ERROR	Error fetching URL www.sogo.com : Error = Get "www.sogo.com": unsupported protocol scheme ""
+2023-06-16T00:26:49.547+0800	DEBUG	Trying to hit GET request for http://www.sogo.com
+2023-06-16T00:26:49.619+0800	INFO	Success! statusCode = 501 Not Implemented for URL http://www.sogo.com
