@@ -1,12 +1,15 @@
 package gin
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestGinFirst(t *testing.T) {
@@ -188,3 +191,83 @@ func TestUploadFile(t *testing.T) {
 
 	router.Run()
 }
+
+// StatCost 是一个统计请求耗时的中间件
+func StatCost() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		start := time.Now()
+		context.Set("name", "小王子") // 可以通过 context.Set 在请求中设置值，后续的处理函数能够取到该值
+		// 调用该请求的剩余处理程序
+		context.Next()
+		// 不调用该请求的剩余处理程序
+		// context.Abort()
+		// 计算耗时
+		cost := time.Since(start)
+		log.Println(cost)
+	}
+}
+
+// 记录响应体的中间件
+type bodyLogWriter struct {
+	gin.ResponseWriter // 嵌入 gin 框架 ResponseWriter
+
+	body *bytes.Buffer // 我们记录用的 response
+}
+
+func (w bodyLogWriter) Write(data []byte) (int, error) {
+	w.body.Write(data)                  //我们记录一分
+	return w.ResponseWriter.Write(data) // 真正写入响应
+}
+
+// ginBodyLogMiddleware 一个记录返回给客户端响应体的中间件
+// https://stackoverflow.com/questions/38501325/how-to-log-response-body-in-gin
+func ginBodyLogMiddleware(context *gin.Context) {
+	blw := &bodyLogWriter{
+		body:           bytes.NewBuffer([]byte{}),
+		ResponseWriter: context.Writer,
+	}
+	context.Writer = blw // 使用我们自定义的类型替换默认的
+
+	context.Next() // 执行业务逻辑
+
+	fmt.Println("Response body: " + blw.body.String()) // 事后按需记录返回的响应
+}
+
+func TestMiddleware(t *testing.T) {
+	// 新建一个没有任何默认中间件的路由
+	r := gin.New()
+	// 注册一个全局中间件
+	r.Use(GinLogger())
+
+	r.GET("/test", func(context *gin.Context) {
+		name := context.MustGet("name").(string) //从上下文取值
+		log.Println(name)
+		context.JSON(http.StatusOK, gin.H{
+			"message": "Hello world!",
+		})
+	})
+
+	// 给 /test2 路由单独注册中间件（可注册多个）
+	//r.GET("/test2", StatCost(), func(context *gin.Context) {
+	//	name := context.MustGet("name")
+	//	log.Println(name)
+	//	context.JSON(http.StatusOK, gin.H{
+	//		"message": "Hello world!",
+	//	})
+	//})
+
+	r.Run()
+}
+
+// gin 的中间件实现，函数责任链条
+//type HandlerFunc func(*Context)
+
+//type HandlersChain []HandlerFunc
+
+//func (c *Context) Next() {
+//	c.index++
+//	for c.index < int8(len(c.handlers)) {
+//		c.handlers[c.index](c)
+//		c.index++
+//	}
+//}
