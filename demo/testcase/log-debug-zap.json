@@ -1,0 +1,4 @@
+{"level":"info","ts":"2023-07-06T01:09:05.722+0800","caller":"testcase/zap_test.go:178","msg":"write log to file","url":"http://www.diff-log-level.com","time":3}
+{"level":"error","ts":"2023-07-06T01:09:05.739+0800","caller":"testcase/zap_test.go:186","msg":"test error ","url":"http://www.diff-log-level.com","name":"jimmmyr"}
+{"level":"info","ts":"2023-07-06T01:17:50.067+0800","caller":"testcase/zap_test.go:180","msg":"write log to file","url":"http://www.diff-log-level.com","time":3}
+{"level":"error","ts":"2023-07-06T01:17:50.083+0800","caller":"testcase/zap_test.go:188","msg":"test error ","url":"http://www.diff-log-level.com","name":"jimmmyr"}

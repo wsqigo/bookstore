@@ -12,5 +12,19 @@ func TestMysql(t *testing.T) {
 		return
 	}
 
+	//queryRowDemo()
+	//queryMultiRowDemo()
+	//insertRowDemo()
+	//queryMultiRowDemo()
 	fmt.Println("connect to db success")
+
+	//prepareInsertDemo()
+	//prepareQueryDemo()
+
+	//sqlInjectDemo("qimi")
+	////sqlInjectDemo("qimi' or 1=1#")
+	//sqlInjectDemo("qimi' union select * from user #")
+	//sqlInjectDemo("qimi' and (select count(*) from user) < 10 #")
+
+	transactionDemo()
 }

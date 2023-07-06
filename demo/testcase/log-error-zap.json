@@ -1,0 +1,2 @@
+{"level":"error","ts":"2023-07-06T01:09:05.739+0800","caller":"testcase/zap_test.go:186","msg":"test error ","url":"http://www.diff-log-level.com","name":"jimmmyr"}
+{"level":"error","ts":"2023-07-06T01:17:50.083+0800","caller":"testcase/zap_test.go:188","msg":"test error ","url":"http://www.diff-log-level.com","name":"jimmmyr"}

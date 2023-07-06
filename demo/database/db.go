@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // https://liwenzhou.com/posts/Go/mysql/
@@ -37,7 +39,7 @@ func queryMultiRowDemo() {
 		return
 	}
 
-	// 非常重要：关闭 rows 释放持有的数据库连接
+	// 非常重要: 关闭 rows 释放持有的数据库链接
 	defer rows.Close()
 
 	// 循环读取结果集中的数据
@@ -45,7 +47,7 @@ func queryMultiRowDemo() {
 		var u user
 		err = rows.Scan(&u.id, &u.name, &u.age)
 		if err != nil {
-			fmt.Printf("scan failed, err:%v", err)
+			fmt.Printf("scan failed, err:%v\n", err)
 			return
 		}
 
@@ -68,7 +70,7 @@ func insertRowDemo() {
 		return
 	}
 
-	fmt.Printf("insert success, the id id %d.\n", theID)
+	fmt.Printf("insert success, the id is %d.\n", theID)
 }
 
 // 更新数据
@@ -87,6 +89,98 @@ func updateRowDemo() {
 	}
 
 	fmt.Printf("update success, affected rows:%d\n", n)
+}
+
+func deleteRowDemo() {
+	sqlStr := "delete from user where id = ?"
+	ret, err := db.Exec(sqlStr, 3)
+	if err != nil {
+		fmt.Printf("delete failed, err:%v\n", err)
+		return
+	}
+
+	n, err := ret.RowsAffected() // 操作影响的函数
+	if err != nil {
+		fmt.Printf("get RowsAffected failed, err:%v\n", err)
+		return
+	}
+
+	fmt.Printf("delete success, affected rows:%d\n", n)
+}
+
+// 预处理查询示例
+func prepareQueryDemo() {
+	sqlStr := "select id, name, age from user where id > ?"
+	stmt, err := db.Prepare(sqlStr)
+	if err != nil {
+		fmt.Printf("prepare failed, err:%v\n", err)
+		return
+	}
+
+	defer stmt.Close()
+	rows, err := stmt.Query(0)
+	if err != nil {
+		fmt.Printf("query failed, err:%v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		u := &user{}
+		err = rows.Scan(&u.id, &u.name, &u.age)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return
+		}
+
+		fmt.Printf("id:%d name:%s age:%d\n", u.id, u.name, u.age)
+	}
+}
+
+// 预处理插入示例
+func prepareInsertDemo() {
+	sqlStr := "insert into user(name, age) values (?,?)"
+	stmt, err := db.Prepare(sqlStr)
+	if err != nil {
+		fmt.Printf("prepare failed, err:%v\n", err)
+		return
+	}
+
+	defer stmt.Close()
+	_, err = stmt.Exec("小王子", 18)
+	if err != nil {
+		fmt.Printf("insert failed, err:%v\n", err)
+		return
+	}
+
+	_, err = stmt.Exec("沙河娜扎", 18)
+	if err != nil {
+		fmt.Printf("insert failed, err:%v\n", err)
+		return
+	}
+
+	fmt.Println("insert success.")
+}
+
+func sqlInjectDemo(name string) {
+	sqlStr := fmt.Sprintf("select id, name, age from user where name='%s'", name)
+	fmt.Printf("SQL:%s\n", sqlStr)
+
+	rows, err := db.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("query failed, err:%v\n", err)
+		return
+	}
+
+	for rows.Next() {
+		var u user
+		err = rows.Scan(&u.id, &u.name, &u.age)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return
+		}
+		fmt.Printf("user:%#v\n", u)
+	}
 }
 
 // 定义一个全局对象 db
@@ -117,4 +211,54 @@ func initDB() error {
 	db.SetMaxOpenConns(200) // 最大连接数
 
 	return nil
+}
+
+// 事务操作示例
+func transactionDemo() {
+	tx, err := db.Begin() // 开启事务
+	if err != nil {
+		fmt.Printf("begin transfer")
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			fmt.Println("事务回滚啦...")
+			tx.Rollback()
+		}
+	}()
+
+	sqlStr1 := "update user set age=30 where id = ?"
+	ret1, err := tx.Exec(sqlStr1, 2)
+	if err != nil {
+		fmt.Printf("exec sql1 failed, err:%v\n", err)
+		return
+	}
+
+	affRow1, err := ret1.RowsAffected()
+	if err != nil {
+		fmt.Printf("exec ret1.RowsAffected() failed, err:%v\n", err)
+		return
+	}
+
+	sqlStr2 := "update user set age=40 where id = ?"
+	ret2, err := tx.Exec(sqlStr2, 3)
+	if err != nil {
+		fmt.Printf("exec sql1 failed, err:%v\n", err)
+		return
+	}
+
+	affRow2, err := ret2.RowsAffected()
+	if err != nil {
+		fmt.Printf("exec ret1.RowsAffected() failed, err:%v\n", err)
+		return
+	}
+
+	fmt.Println(affRow1, affRow2)
+	if affRow1 == 1 && affRow2 == 1 {
+		fmt.Println("事务提交啦...")
+		tx.Commit()
+	}
+
+	fmt.Println("exec trans success!")
 }

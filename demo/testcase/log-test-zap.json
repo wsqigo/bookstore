@@ -1,0 +1,1 @@
+{"level":"info","ts":"2023-07-06T01:01:36.804+0800","caller":"testcase/zap_test.go:154","msg":"write log to file","url":"http://www.test.com","attemp":3}
