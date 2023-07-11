@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bookstore/web_app/conf"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -40,12 +41,12 @@ func getEncoder() zapcore.Encoder {
 }
 
 // Init 初始化 Logger
-func Init() error {
+func Init(cfg *conf.LogConfig) error {
 	writeSyncer := getLogWriter(
-		viper.GetString("log.filename"),
-		viper.GetInt("log.max_size"),
-		viper.GetInt("log.max_backups"),
-		viper.GetInt("log.max_age"),
+		cfg.Filename,
+		cfg.MaxSize,
+		cfg.MaxBackups,
+		cfg.MaxAge,
 	)
 
 	encoder := getEncoder()

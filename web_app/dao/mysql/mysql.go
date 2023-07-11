@@ -1,25 +1,20 @@
 package mysql
 
 import (
+	"bookstore/web_app/conf"
 	"fmt"
 
 	"go.uber.org/zap"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"github.com/spf13/viper"
 )
 
 var db *sqlx.DB
 
-func Init() error {
+func Init(cfg *conf.MysqlConfig) error {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4",
-		viper.GetString("mysql.user"),
-		viper.GetString("mysql.password"),
-		viper.GetString("mysql.host"),
-		viper.GetInt("mysql.port"),
-		viper.GetString("mysql.dbname"),
-	)
+		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName)
 
 	var err error
 	// 也可以使用 MustConnect，连接不成功就 panic
@@ -29,8 +24,8 @@ func Init() error {
 		return err
 	}
 
-	db.SetMaxOpenConns(viper.GetInt("mysql.max_open_conns"))
-	db.SetMaxOpenConns(viper.GetInt("mysql.max_idle_conns"))
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	return nil
 }
 

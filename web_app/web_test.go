@@ -27,7 +27,7 @@ func TestWeb(t *testing.T) {
 		return
 	}
 	// 2. 初始化日志
-	if err := logger.Init(); err != nil {
+	if err := logger.Init(conf.Conf.LogConfig); err != nil {
 		fmt.Println("init logger failed, err:", err)
 		return
 	}
@@ -35,13 +35,13 @@ func TestWeb(t *testing.T) {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	// 3. 初始化 MySQL 连接
-	if err := mysql.Init(); err != nil {
+	if err := mysql.Init(conf.Conf.MysqlConfig); err != nil {
 		fmt.Println("init mysql failed, err:", err)
 		return
 	}
 	defer mysql.Close()
 	// 4. 初始化 Redis 连接
-	if err := redis.Init(); err != nil {
+	if err := redis.Init(conf.Conf.RedisConfig); err != nil {
 		fmt.Println("init redis failed, err:", err)
 		return
 	}
