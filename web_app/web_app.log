@@ -1,0 +1,6 @@
+{"level":"debug","time":"2023-07-11T09:35:51.662+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-11T09:35:53.686+0800","caller":"mysql/mysql.go:28","msg":"connect DB failed, err:","error":"dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it."}
+{"level":"debug","time":"2023-07-11T09:56:48.343+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-11T09:56:48.371+0800","caller":"mysql/mysql.go:28","msg":"connect DB failed, err:","error":"Error 1049 (42000): Unknown database 'sql_demo'"}
+{"level":"debug","time":"2023-07-11T10:00:50.445+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-11T10:02:17.039+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}

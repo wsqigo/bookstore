@@ -7,15 +7,18 @@ log:
   filename: "web_app.log"
   max_size: 200
   max_age: 30
-  # 备份数量
-  max_backups: 7
+  max_backups: 7 # 备份数量
 mysql:
   host: "127.0.0.1"
   port: 3306
   user: "root"
   password: "root"
   dbname: "sql_demo"
+  max_open_conns: 200
+  max_idle_conns: 10
 redis:
   host: "127.0.0.1"
   port: 6379
+  password: ""
   db: 0
+  pool_size: 100
