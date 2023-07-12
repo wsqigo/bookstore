@@ -2,6 +2,7 @@ package conf
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -12,10 +13,13 @@ import (
 var Conf = new(AppConfig)
 
 type AppConfig struct {
-	Name         string `mapstructure:"name"`
-	Mode         string `mapstructure:"mode"`
-	Version      string `mapstructure:"version"`
-	Port         string `mapstructure:"port"`
+	Name      string    `mapstructure:"name"`
+	Mode      string    `mapstructure:"mode"`
+	Version   string    `mapstructure:"version"`
+	StartTime time.Time `mapstructure:"start_time"`
+	MachineID int64     `mapstructure:"machine_id"`
+	Port      string    `mapstructure:"port"`
+
 	*LogConfig   `mapstructure:"log"`
 	*MysqlConfig `mapstructure:"mysql"`
 	*RedisConfig `mapstructure:"log"`
@@ -48,6 +52,11 @@ type RedisConfig struct {
 }
 
 func Init() error {
+	// 方式1: 直接指定配置文件路径（相对路径或者绝对路径）
+	// 相对路径: 相对执行的可执行文件的相对路径
+	//viper.SetConfigFile("./conf/config.yaml")
+
+	// 方式2: 指定配置文件名和配置文件的位置，viper 自行查找可用的配置文件
 	viper.SetConfigName("config") // 指定配置文件名称（不需要带后缀）
 	viper.SetConfigType("yaml")   // 指定配置文件类型
 	viper.AddConfigPath("./conf") // 指定查找配置文件的路径
