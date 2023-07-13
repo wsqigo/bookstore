@@ -1,4 +1,4 @@
-package routes
+package router
 
 import (
 	"bookstore/web_app/logger"

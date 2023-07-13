@@ -5,7 +5,8 @@ import (
 	"bookstore/web_app/dao/mysql"
 	"bookstore/web_app/dao/redis"
 	"bookstore/web_app/logger"
-	"bookstore/web_app/routes"
+	"bookstore/web_app/router"
+	"bookstore/web_app/snowflake"
 	"context"
 	"fmt"
 	"log"
@@ -46,8 +47,12 @@ func TestWeb(t *testing.T) {
 		return
 	}
 	defer redis.Close()
+	// 初始化分布式ID
+	if err := snowflake.Init(conf.Conf.StartTime, conf.Conf.MachineID); err != nil {
+		fmt.Println("init snowflake failed, err:", err)
+	}
 	// 5. 注册路由
-	r := routes.Setup()
+	r := router.Setup()
 	// 6. 启动服务（优雅关机）
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", viper.GetInt("app.port")),
