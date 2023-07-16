@@ -2,6 +2,7 @@ package web_app
 
 import (
 	"bookstore/web_app/conf"
+	"bookstore/web_app/controller"
 	"bookstore/web_app/dao/mysql"
 	"bookstore/web_app/dao/redis"
 	"bookstore/web_app/logger"
@@ -16,8 +17,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-
-	"github.com/spf13/viper"
 )
 
 // Go Web 开发较通用的脚手架模版
@@ -28,7 +27,7 @@ func TestWeb(t *testing.T) {
 		return
 	}
 	// 2. 初始化日志
-	if err := logger.Init(conf.Conf.LogConfig); err != nil {
+	if err := logger.Init(conf.Conf.LogConfig, conf.Conf.Mode); err != nil {
 		fmt.Println("init logger failed, err:", err)
 		return
 	}
@@ -51,11 +50,16 @@ func TestWeb(t *testing.T) {
 	if err := snowflake.Init(conf.Conf.StartTime, conf.Conf.MachineID); err != nil {
 		fmt.Println("init snowflake failed, err:", err)
 	}
+	// 初始化 gin 框架内置的校验器使用的翻译器
+	if err := controller.InitTrans("zh"); err != nil {
+		fmt.Println("init validator trans failed, err:", err)
+		return
+	}
 	// 5. 注册路由
-	r := router.Setup()
+	r := router.SetupRouter()
 	// 6. 启动服务（优雅关机）
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", viper.GetInt("app.port")),
+		Addr:    fmt.Sprintf(":%d", conf.Conf.Port),
 		Handler: r,
 	}
 

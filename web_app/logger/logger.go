@@ -41,7 +41,7 @@ func getEncoder() zapcore.Encoder {
 }
 
 // Init 初始化 Logger
-func Init(cfg *conf.LogConfig) error {
+func Init(cfg *conf.LogConfig, mode string) error {
 	writeSyncer := getLogWriter(
 		cfg.Filename,
 		cfg.MaxSize,
@@ -57,7 +57,18 @@ func Init(cfg *conf.LogConfig) error {
 		return err
 	}
 
-	core := zapcore.NewCore(encoder, writeSyncer, l)
+	var core zapcore.Core
+	if mode == "dev" {
+		// 开发模式，日志输出到终端
+		consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		core = zapcore.NewTee(
+			zapcore.NewCore(encoder, writeSyncer, l),
+			zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),
+		)
+	} else {
+		core = zapcore.NewCore(encoder, writeSyncer, l)
+	}
+
 	lg := zap.New(core, zap.AddCaller())
 	// 替换 zap 库中的全局
 	zap.ReplaceGlobals(lg)

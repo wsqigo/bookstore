@@ -17,7 +17,7 @@ type AppConfig struct {
 	Version   string `mapstructure:"version"`
 	StartTime string `mapstructure:"start_time"`
 	MachineID int64  `mapstructure:"machine_id"`
-	Port      string `mapstructure:"port"`
+	Port      int    `mapstructure:"port"`
 
 	*LogConfig   `mapstructure:"log"`
 	*MysqlConfig `mapstructure:"mysql"`

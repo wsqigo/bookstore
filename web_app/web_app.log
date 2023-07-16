@@ -9,3 +9,38 @@
 {"level":"debug","time":"2023-07-12T00:13:23.147+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
 {"level":"debug","time":"2023-07-12T00:19:14.718+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
 {"level":"debug","time":"2023-07-12T00:19:21.355+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:47:23.155+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"error","time":"2023-07-14T09:47:25.181+0800","caller":"mysql/mysql.go:23","msg":"connect DB failed, err:","error":"dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it."}
+{"level":"debug","time":"2023-07-14T09:48:54.835+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"error","time":"2023-07-14T09:48:56.855+0800","caller":"mysql/mysql.go:23","msg":"connect DB failed, err:","error":"dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it."}
+{"level":"debug","time":"2023-07-14T09:49:26.404+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"error","time":"2023-07-14T09:49:26.429+0800","caller":"mysql/mysql.go:23","msg":"connect DB failed, err:","error":"driver: bad connection"}
+{"level":"debug","time":"2023-07-14T09:49:37.507+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:52:16.874+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:53:01.590+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:54:34.009+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:55:26.470+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:56:06.672+0800","caller":"web_app/web_test.go:37","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-14T09:57:40.979+0800","caller":"web_app/web_test.go:35","msg":"logger init success..."}
+{"level":"info","time":"2023-07-14T09:57:58.891+0800","caller":"logger/logger.go:76","msg":"/ping","status":200,"method":"GET","path":"/ping","query":"","ip":"::1","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36","errors":"","cost":0.0103194}
+{"level":"info","time":"2023-07-14T09:57:59.342+0800","caller":"logger/logger.go:76","msg":"/favicon.ico","status":200,"method":"GET","path":"/favicon.ico","query":"","ip":"::1","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36","errors":"","cost":0.0096858}
+{"level":"info","time":"2023-07-14T09:58:13.334+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"::1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0121163}
+{"level":"debug","time":"2023-07-16T12:29:16.447+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-16T12:30:34.915+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"info","time":"2023-07-16T12:31:04.756+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"GET","path":"/signup","query":"","ip":"::1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005478}
+{"level":"error","time":"2023-07-16T12:31:11.604+0800","caller":"controller/user.go:34","msg":"SignUp with invalid param","error":"Key: 'SignUpReq.password' Error:Field validation for 'password' failed on the 'required' tag\nKey: 'SignUpReq.re_password' Error:Field validation for 're_password' failed on the 'required' tag"}
+{"level":"info","time":"2023-07-16T12:31:11.604+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"::1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0007617}
+{"level":"debug","time":"2023-07-16T12:38:04.578+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-16T12:38:32.034+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-16T12:38:36.040+0800","caller":"controller/user.go:34","msg":"SignUp with invalid param","error":"Key: 'SignUpReq.password' Error:Field validation for 'password' failed on the 'required' tag\nKey: 'SignUpReq.re_password' Error:Field validation for 're_password' failed on the 'required' tag"}
+{"level":"info","time":"2023-07-16T12:38:36.040+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"::1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005229}
+{"level":"debug","time":"2023-07-16T22:53:31.901+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-16T22:55:20.843+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"info","time":"2023-07-16T22:56:45.140+0800","caller":"logger/logger.go:76","msg":"/signup:8080","status":200,"method":"POST","path":"/signup:8080","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0}
+{"level":"info","time":"2023-07-16T22:57:15.648+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0109818}
+{"level":"info","time":"2023-07-16T22:57:27.455+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0027086}
+{"level":"debug","time":"2023-07-16T22:58:25.640+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"info","time":"2023-07-16T22:58:29.682+0800","caller":"logger/logger.go:76","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0026139}
+{"level":"debug","time":"2023-07-16T23:09:38.153+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-16T23:09:53.279+0800","caller":"controller/user.go:50","msg":"SignUp with invalid param","error":"Key: 'SignUpReq.re_password' Error:Field validation for 're_password' failed on the 'required' tag"}
+{"level":"info","time":"2023-07-16T23:09:53.279+0800","caller":"logger/logger.go:87","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005317}
