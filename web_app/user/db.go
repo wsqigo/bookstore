@@ -1,15 +1,18 @@
-package mysql
+package user
 
 import (
-	"bookstore/web_app/model"
-	"crypto/md5"
-	"encoding/hex"
+	"bookstore/web_app/dao/mysql"
+	"bookstore/web_app/util"
 	"errors"
 )
 
 // 把每一步数据库操作封装成函数
 
-const secret = "wsqigo"
+var (
+	ErrorUserExist = errors.New("username already exist")
+)
+
+var db = mysql.DB
 
 // CheckUserExist 检查指定 name 的用户是否存在
 func CheckUserExist(name string) error {
@@ -22,26 +25,30 @@ func CheckUserExist(name string) error {
 	}
 
 	if count > 0 {
-		return errors.New("username already exist. name = " + name)
+		return ErrorUserExist
 	}
 
 	return nil
 }
 
+func GetUserByName(name string) (*User, error) {
+	user := &User{}
+	sqlStr := `select user_id, username, password, email from user wher username = ?`
+	err := db.Get(user, sqlStr, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 // InsertUser 插入一条新的用户记录
-func InsertUser(user *model.User) error {
+func InsertUser(user *User) error {
 	// 对密码进行加密
-	password := encryptPassword(user.Password)
+	password := util.EncryptPassword(user.Password)
 	// 执行 SQL 语句入库
 	sqlStr := `insert into user(user_id, username, password, email) values(?,?,?,?)`
 	_, err := db.Exec(sqlStr, user.UserID, user.Username, password, user.Email)
 
 	return err
-}
-
-func encryptPassword(oPassword string) string {
-	h := md5.New()
-	h.Write([]byte(secret))
-
-	return hex.EncodeToString(h.Sum([]byte(oPassword)))
 }

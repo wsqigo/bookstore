@@ -56,7 +56,7 @@ func TestWeb(t *testing.T) {
 		return
 	}
 	// 5. 注册路由
-	r := router.SetupRouter()
+	r := router.SetupRouter(conf.Conf.Mode)
 	// 6. 启动服务（优雅关机）
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", conf.Conf.Port),

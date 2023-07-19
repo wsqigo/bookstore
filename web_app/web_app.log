@@ -44,3 +44,10 @@
 {"level":"debug","time":"2023-07-16T23:09:38.153+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
 {"level":"error","time":"2023-07-16T23:09:53.279+0800","caller":"controller/user.go:50","msg":"SignUp with invalid param","error":"Key: 'SignUpReq.re_password' Error:Field validation for 're_password' failed on the 'required' tag"}
 {"level":"info","time":"2023-07-16T23:09:53.279+0800","caller":"logger/logger.go:87","msg":"/signup","status":200,"method":"POST","path":"/signup","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005317}
+{"level":"debug","time":"2023-07-16T23:41:05.728+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-16T23:41:44.602+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-19T23:33:12.294+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-19T23:33:14.315+0800","caller":"mysql/mysql.go:23","msg":"connect DB failed, err:","error":"dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it."}
+{"level":"debug","time":"2023-07-19T23:36:29.955+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
+{"level":"error","time":"2023-07-19T23:36:29.975+0800","caller":"mysql/mysql.go:23","msg":"connect DB failed, err:","error":"Error 1049 (42000): Unknown database 'sql_demo'"}
+{"level":"debug","time":"2023-07-19T23:41:57.984+0800","caller":"web_app/web_test.go:36","msg":"logger init success..."}
