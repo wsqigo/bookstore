@@ -30,8 +30,8 @@ func Login(user User) (string, error) {
 	return jwt.GenToken(dbUser.UserID, dbUser.Username)
 }
 
-// GetCurrentUser 获取当前登录的用户 ID
-func GetCurrentUser(ctx *gin.Context) (int64, error) {
+// GetCurrentUserID 获取当前登录的用户 ID
+func GetCurrentUserID(ctx *gin.Context) (int64, error) {
 	uid, ok := ctx.Get("userID")
 	if !ok {
 		return 0, code.ErrorUserExist

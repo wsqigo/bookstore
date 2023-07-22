@@ -142,3 +142,21 @@
 {"level":"info","time":"2023-07-22T11:33:43.930+0800","caller":"logger/logger.go:87","msg":"/api/v1/community/1","status":200,"method":"GET","path":"/api/v1/community/1","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":597.1409567}
 {"level":"debug","time":"2023-07-22T11:33:54.783+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
 {"level":"info","time":"2023-07-22T11:34:24.604+0800","caller":"logger/logger.go:87","msg":"/api/v1/community/1","status":200,"method":"GET","path":"/api/v1/community/1","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":2.4519921}
+{"level":"debug","time":"2023-07-22T13:42:54.669+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"debug","time":"2023-07-22T13:46:51.185+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:46:57.727+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0010014}
+{"level":"debug","time":"2023-07-22T13:47:26.432+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:47:37.472+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0}
+{"level":"info","time":"2023-07-22T13:48:01.173+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0}
+{"level":"info","time":"2023-07-22T13:48:30.486+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0}
+{"level":"debug","time":"2023-07-22T13:48:37.814+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:48:40.555+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0}
+{"level":"debug","time":"2023-07-22T13:49:05.789+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:49:09.169+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005352}
+{"level":"debug","time":"2023-07-22T13:49:23.810+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:49:29.472+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0005668}
+{"level":"info","time":"2023-07-22T13:49:48.641+0800","caller":"logger/logger.go:87","msg":"/api/v1/login","status":200,"method":"POST","path":"/api/v1/login","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":0.0050497}
+{"level":"info","time":"2023-07-22T13:50:33.449+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":3.7366498}
+{"level":"debug","time":"2023-07-22T13:50:45.608+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}
+{"level":"info","time":"2023-07-22T13:51:08.457+0800","caller":"logger/logger.go:87","msg":"/api/v1/post","status":200,"method":"POST","path":"/api/v1/post","query":"","ip":"127.0.0.1","user-agent":"Apifox/1.0.0 (https://www.apifox.cn)","errors":"","cost":20.5243055}
+{"level":"debug","time":"2023-07-22T13:51:14.541+0800","caller":"web_app/web_test.go:33","msg":"logger init success..."}

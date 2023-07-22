@@ -5,6 +5,7 @@ import (
 	"bookstore/web_app/controller"
 	"bookstore/web_app/logger"
 	"bookstore/web_app/middlewares"
+	"bookstore/web_app/post"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,8 @@ func SetupRouter(mode string) *gin.Engine {
 	{
 		v1.GET("/community", community.GetCommunityConf)
 		v1.GET("/community/:id", community.GetCommunityDetail)
+		v1.POST("/post", post.CreatePost)
+		v1.POST("/post/:id", post.GetPostDetailHandler)
 	}
 
 	r.NoRoute(func(ctx *gin.Context) {
