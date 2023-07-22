@@ -1,6 +1,7 @@
 package user
 
 import (
+	"bookstore/web_app/code"
 	"bookstore/web_app/pkg/jwt"
 	"bookstore/web_app/util"
 	"database/sql"
@@ -9,17 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	ErrorUserNotLogin = errors.New("user is not login")
-	ErrorUserNotExist = errors.New("user is not exist")
-)
-
 func Login(user User) (string, error) {
 	// 根据用户名查询用户信息
 	dbUser, err := GetUserByName(user.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", ErrorUserNotExist
+			return "", code.ErrorUserNotExist
 		}
 		return "", err
 	}
@@ -38,12 +34,12 @@ func Login(user User) (string, error) {
 func GetCurrentUser(ctx *gin.Context) (int64, error) {
 	uid, ok := ctx.Get("userID")
 	if !ok {
-		return 0, ErrorUserExist
+		return 0, code.ErrorUserExist
 	}
 
 	userID, ok := uid.(int64)
 	if !ok {
-		return 0, ErrorUserNotLogin
+		return 0, code.ErrorUserNotLogin
 	}
 
 	return userID, nil

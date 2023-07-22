@@ -3,6 +3,7 @@ package mysql
 import (
 	"bookstore/web_app/conf"
 	"fmt"
+	"sync"
 
 	"go.uber.org/zap"
 
@@ -10,25 +11,37 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var DB *sqlx.DB
+var (
+	db   *sqlx.DB
+	once sync.Once
+)
 
-func Init(cfg *conf.MysqlConfig) error {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4",
+func GetDBConn() *sqlx.DB {
+	once.Do(func() {
+		Init()
+	})
+
+	return db
+}
+
+func Init() {
+	conf.Init()
+	cfg := conf.Conf.MysqlConfig
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local",
 		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName)
 
 	var err error
 	// 也可以使用 MustConnect，连接不成功就 panic
-	DB, err = sqlx.Connect("mysql", dsn)
+	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
-		zap.L().Error("connect DB failed, err:", zap.Error(err))
-		return err
+		zap.L().Error("connect db failed, err:", zap.Error(err))
+		panic("init mysql failed, err: " + err.Error())
 	}
 
-	DB.SetMaxOpenConns(cfg.MaxOpenConns)
-	DB.SetMaxIdleConns(cfg.MaxIdleConns)
-	return nil
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
 }
 
 func Close() {
-	_ = DB.Close()
+	_ = db.Close()
 }

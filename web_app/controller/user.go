@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bookstore/web_app/code"
 	"bookstore/web_app/user"
 	"errors"
 	"net/http"
@@ -47,7 +48,7 @@ func SignUpHandler(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.L().Error("sign up failed", zap.Error(err))
-		if errors.Is(err, user.ErrorUserExist) {
+		if errors.Is(err, code.ErrorUserExist) {
 			ResponseError(ctx, CodeUserExist)
 			return
 		}
@@ -61,8 +62,8 @@ func SignUpHandler(ctx *gin.Context) {
 
 // 登录请求参数
 type loginReq struct {
-	UserName string `json:"user_name" binding:"require"`
-	Password string `json:"password" binding:"password"`
+	UserName string `json:"username" binding:"required"`
+	Password string `json:"password"`
 }
 
 func LoginHandler(ctx *gin.Context) {
@@ -94,7 +95,7 @@ func LoginHandler(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.L().Error("login failed", zap.Error(err))
-		if errors.Is(err, user.ErrorUserNotExist) {
+		if errors.Is(err, code.ErrorUserNotExist) {
 			ResponseError(ctx, CodeUserExist)
 			return
 		}

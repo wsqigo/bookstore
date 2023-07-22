@@ -1,18 +1,16 @@
 package user
 
 import (
+	"bookstore/web_app/code"
 	"bookstore/web_app/dao/mysql"
 	"bookstore/web_app/util"
-	"errors"
 )
 
 // 把每一步数据库操作封装成函数
 
 var (
-	ErrorUserExist = errors.New("username already exist")
+	db = mysql.GetDBConn()
 )
-
-var db = mysql.DB
 
 // CheckUserExist 检查指定 name 的用户是否存在
 func CheckUserExist(name string) error {
@@ -25,7 +23,7 @@ func CheckUserExist(name string) error {
 	}
 
 	if count > 0 {
-		return ErrorUserExist
+		return code.ErrorUserExist
 	}
 
 	return nil
@@ -33,7 +31,7 @@ func CheckUserExist(name string) error {
 
 func GetUserByName(name string) (*User, error) {
 	user := &User{}
-	sqlStr := `select user_id, username, password, email from user wher username = ?`
+	sqlStr := `select user_id, username, password, email from user where username = ?`
 	err := db.Get(user, sqlStr, name)
 	if err != nil {
 		return nil, err

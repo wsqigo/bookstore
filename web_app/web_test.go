@@ -22,10 +22,7 @@ import (
 // Go Web 开发较通用的脚手架模版
 func TestWeb(t *testing.T) {
 	// 1. 加载配置
-	if err := conf.Init(); err != nil {
-		fmt.Println("init conf failed, err:", err)
-		return
-	}
+	conf.Init()
 	// 2. 初始化日志
 	if err := logger.Init(conf.Conf.LogConfig, conf.Conf.Mode); err != nil {
 		fmt.Println("init logger failed, err:", err)
@@ -35,10 +32,7 @@ func TestWeb(t *testing.T) {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	// 3. 初始化 MySQL 连接
-	if err := mysql.Init(conf.Conf.MysqlConfig); err != nil {
-		fmt.Println("init mysql failed, err:", err)
-		return
-	}
+	mysql.Init()
 	defer mysql.Close()
 	// 4. 初始化 Redis 连接
 	if err := redis.Init(conf.Conf.RedisConfig); err != nil {

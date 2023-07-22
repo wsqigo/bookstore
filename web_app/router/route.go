@@ -1,6 +1,7 @@
 package router
 
 import (
+	"bookstore/web_app/community"
 	"bookstore/web_app/controller"
 	"bookstore/web_app/logger"
 	"bookstore/web_app/middlewares"
@@ -17,17 +18,19 @@ func SetupRouter(mode string) *gin.Engine {
 	r := gin.New()
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
 
+	v1 := r.Group("/api/v1")
 	// 注册业务路由
-	r.POST("/signup", controller.SignUpHandler)
+	v1.POST("/signup", controller.SignUpHandler)
 	// 登录
-	r.POST("/login", controller.LoginHandler)
-	// auth
-	r.POST("/auth", controller.LoginHandler)
-	// Token
-	r.GET("/ping", middlewares.JWTAuthMiddleware(), func(ctx *gin.Context) {
-		// 如果是登录的用户，判断请求头中是否有有效的 JWT
-		ctx.String(http.StatusOK, "pong")
-	})
+	v1.POST("/login", controller.LoginHandler)
+
+	// 应用 JWT 认证中间件
+	v1.Use(middlewares.JWTAuthMiddleware())
+
+	{
+		v1.GET("/community", community.GetCommunityConf)
+		v1.GET("/community/:id", community.GetCommunityDetail)
+	}
 
 	r.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
