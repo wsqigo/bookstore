@@ -1,6 +1,7 @@
 package post
 
 import (
+	community2 "bookstore/web_app/community"
 	"bookstore/web_app/controller"
 	"bookstore/web_app/user"
 	"strconv"
@@ -61,14 +62,80 @@ func GetPostDetailHandler(ctx *gin.Context) {
 		return
 	}
 
-	data, err := GetPostByID(pid)
+	// 根据 id 取出帖子数据（查数据库）
+	post, err := GetPostByID(pid)
 	if err != nil {
-		zap.L().Error("GetPostByID failed", zap.Error(err))
+		zap.L().Error("GetPostByID failed", zap.Int64("pid", pid), zap.Error(err))
 		controller.ResponseError(ctx, controller.CodeServerBusy)
 		return
 	}
 
-	// 根据 id 取出帖子数据（查数据库）
-	controller.ResponseSuccess(ctx, data)
+	// 根据作者 id 查询作者信息
+	u, err := user.GetUserByID(post.AuthorID)
+	if err != nil {
+		zap.L().Error("GetUserById failed",
+			zap.Int64("author_id", post.AuthorID),
+			zap.Error(err))
+		controller.ResponseError(ctx, controller.CodeServerBusy)
+		return
+	}
+
+	// 根据社区id查询社区详细信息
+	community, err := community2.GetCommunityDetailByID(post.CommunityID)
+	if err != nil {
+		zap.L().Error("GetCommunityDetailByID failed",
+			zap.Int64("author_id", post.AuthorID),
+			zap.Error(err))
+		controller.ResponseError(ctx, controller.CodeServerBusy)
+		return
+	}
+
+	res := ApiPostDetail{
+		AuthorName:  u.Username,
+		DBPost:      post,
+		DBCommunity: community,
+	}
+
+	controller.ResponseSuccess(ctx, res)
+}
+
+func GetPostDetailList() ([]ApiPostDetail, error) {
+	posts, err := GetPostList()
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]ApiPostDetail, 0, len(posts))
+	for _, post := range posts {
+		// 根据作者id查询作者信息
+		u, err := user.GetUserByID(post.AuthorID)
+		if err != nil {
+			zap.L().Error("GetUserByID failed",
+				zap.Int64("author_id", post.AuthorID),
+				zap.Error(err))
+			return nil, err
+		}
+
+		// 根据社区id查询社区详细信息
+		community, err := community2.GetCommunityDetailByID(post.CommunityID)
+		if err != nil {
+			zap.L().Error("GetCommunityDetailByID failed",
+				zap.Int64("author_id", post.AuthorID),
+				zap.Error(err))
+			return nil, err
+		}
+
+		data = append(data, ApiPostDetail{
+			AuthorName:  u.Username,
+			DBPost:      post,
+			DBCommunity: community,
+		})
+	}
+
+	return data, nil
+}
+
+// GetPostListHandler 获取帖子列表的处理函数
+func GetPostListHandler(ctx *gin.Context) {
 
 }

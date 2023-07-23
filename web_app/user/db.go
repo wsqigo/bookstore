@@ -40,6 +40,17 @@ func GetUserByName(name string) (*User, error) {
 	return user, nil
 }
 
+func GetUserByID(id int64) (*User, error) {
+	user := &User{}
+	sqlStr := `select user_id, username, password, email from user where user_id = ?`
+	err := db.Get(user, sqlStr, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 // InsertUser 插入一条新的用户记录
 func InsertUser(user *User) error {
 	// 对密码进行加密

@@ -1,6 +1,9 @@
 package post
 
-import "time"
+import (
+	"bookstore/web_app/community"
+	"time"
+)
 
 type DBPost struct {
 	ID          int64     `json:"id" db:"post_id"`
@@ -12,10 +15,10 @@ type DBPost struct {
 	CreateTime  time.Time `json:"create_time" db:"create_time"`
 }
 
-// Api
+// ApiPostDetail 帖子详情
 type ApiPostDetail struct {
 	DBPost
+	community.DBCommunity // 嵌入社区信息
 
-	AuthorName string
-	Community  // 嵌入社区信息
+	AuthorName string `json:"author_name"`
 }
