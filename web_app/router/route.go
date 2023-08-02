@@ -31,10 +31,9 @@ func SetupRouter(mode string) *gin.Engine {
 	{
 		v1.GET("/community", community.GetCommunityConf)
 		v1.GET("/community/:id", community.GetCommunityDetail)
-
-		v1.POST("/post", post.CreatePost)
+		v1.POST("/post", post.CreatePostHandler)
 		v1.POST("/post/:id", post.GetPostDetailHandler)
-		v1.GET("/post", post.GetPostDetailHandler)
+		v1.POST("/list-posts", post.GetPostListHandler)
 	}
 
 	r.NoRoute(func(ctx *gin.Context) {

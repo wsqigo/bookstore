@@ -10,6 +10,3 @@ type DBCommunity struct {
 	CreatTime     time.Time `json:"creat_time" db:"create_time"`
 	UpdateTime    time.Time `json:"update_time" db:"update_time"`
 }
-
-type RespCommunity struct {
-}

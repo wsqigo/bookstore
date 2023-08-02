@@ -1,7 +1,6 @@
 package post
 
 import (
-	"bookstore/web_app/community"
 	"time"
 )
 
@@ -15,10 +14,10 @@ type DBPost struct {
 	CreateTime  time.Time `json:"create_time" db:"create_time"`
 }
 
-// ApiPostDetail 帖子详情
+// ApiPostDetail 帖子详情接口的结构体
 type ApiPostDetail struct {
-	DBPost
-	community.DBCommunity // 嵌入社区信息
+	DBPost // 嵌入帖子结构体
 
-	AuthorName string `json:"author_name"`
+	AuthorName    string `json:"author_name"`
+	CommunityName string `json:"community_name"` // 嵌入社区信息
 }

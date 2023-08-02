@@ -32,15 +32,10 @@ func GetPostByID(pid int64) (DBPost, error) {
 	return post, nil
 }
 
-func GetPostList() ([]DBPost, error) {
-	sqlStr := `select post_id, title, content, author_id, community_id, create_time
-	from post order by create_time, limit 2`
+func GetDBPostList(page, size int64) ([]DBPost, error) {
+	sqlStr := `select post_id, title, content, author_id, community_id, create_time from post limit ?,?`
 
 	posts := make([]DBPost, 0, 2)
-	err := db.Get(&posts, sqlStr)
-	if err != nil {
-		return nil, err
-	}
-
-	return posts, nil
+	err := db.Get(&posts, sqlStr, (page-1)*size, size)
+	return posts, err
 }

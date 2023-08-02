@@ -61,3 +61,11 @@ func InsertUser(user *User) error {
 
 	return err
 }
+
+// GetUserById 根据 id 获取用户信息
+func GetUserById(uid int64) (*User, error) {
+	user := &User{}
+	sqlStr := `select user_id, username from user where user_id = ?`
+	err := db.Get(user, sqlStr, uid)
+	return user, err
+}
